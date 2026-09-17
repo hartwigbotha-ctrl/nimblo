@@ -1,10 +1,12 @@
 "use server";
 
 import { db } from "@/db";
-import { businesses, subscriptions, plans } from "@/db/schema";
+import { businesses, subscriptions, plans, users } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
-import { requireBusiness } from "@/lib/session";
+import { requireBusiness, requireSession } from "@/lib/session";
 import { revalidatePath } from "next/cache";
+import bcrypt from "bcryptjs";
+import { z } from "zod";
 
 const MAX_LOGO_BYTES = 500 * 1024; // 500KB — keeps the PDF/email fast, plenty for a logo
 const MIN_LOGO_HEIGHT = 20;
@@ -113,4 +115,68 @@ export async function setPlanManually(formData: FormData) {
 
   revalidatePath("/settings");
   revalidatePath("/imports");
+}
+
+const changePasswordSchema = z
+  .object({
+    currentPassword: z.string().min(1, "Enter your current password"),
+    newPassword: z.string().min(8, "New password must be at least 8 characters"),
+    confirmPassword: z.string().min(1, "Confirm your new password"),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: "New passwords don't match",
+    path: ["confirmPassword"],
+  });
+
+export type ChangePasswordState = {
+  error?: string;
+  fieldErrors?: Record<string, string>;
+  success?: boolean;
+};
+
+// Lets the logged-in account holder change their own password from
+// Settings, after confirming their current one. Any user (owner or staff)
+// can change their own password this way — it only ever touches the
+// currently-signed-in user's row, never anyone else's.
+export async function changePassword(
+  _prevState: ChangePasswordState,
+  formData: FormData
+): Promise<ChangePasswordState> {
+  const session = await requireSession();
+  const userId = (session.user as { id?: string })?.id;
+  if (!userId) {
+    return { error: "Couldn't find your account. Please log in again." };
+  }
+
+  const parsed = changePasswordSchema.safeParse({
+    currentPassword: formData.get("currentPassword"),
+    newPassword: formData.get("newPassword"),
+    confirmPassword: formData.get("confirmPassword"),
+  });
+
+  if (!parsed.success) {
+    const fieldErrors: Record<string, string> = {};
+    for (const issue of parsed.error.issues) {
+      fieldErrors[String(issue.path[0])] = issue.message;
+    }
+    return { fieldErrors };
+  }
+
+  const user = await db.query.users.findFirst({ where: eq(users.id, userId) });
+  if (!user) {
+    return { error: "Couldn't find your account. Please log in again." };
+  }
+
+  const valid = await bcrypt.compare(parsed.data.currentPassword, user.passwordHash);
+  if (!valid) {
+    return { fieldErrors: { currentPassword: "That's not your current password." } };
+  }
+
+  const passwordHash = await bcrypt.hash(parsed.data.newPassword, 10);
+  await db
+    .update(users)
+    .set({ passwordHash, updatedAt: new Date().toISOString() })
+    .where(eq(users.id, userId));
+
+  return { success: true };
 }

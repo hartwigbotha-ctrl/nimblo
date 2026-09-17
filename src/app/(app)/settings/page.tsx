@@ -6,6 +6,7 @@ import { eq, desc } from "drizzle-orm";
 import Link from "next/link";
 import { CancelSubscriptionButton } from "./cancel-subscription-button";
 import { LogoControls } from "./logo-controls";
+import { ChangePasswordForm } from "./change-password-form";
 
 export default async function SettingsPage() {
   const { business } = await requireBusiness();
@@ -92,6 +93,12 @@ export default async function SettingsPage() {
             Update
           </button>
         </form>
+      </div>
+
+      <div className="bg-white border border-gray-200 rounded-lg p-6">
+        <h2 className="font-semibold mb-1">Account</h2>
+        <p className="text-sm text-gray-500 mb-4">Change the password for your login.</p>
+        <ChangePasswordForm />
       </div>
 
       <form
