@@ -184,7 +184,11 @@ export async function adminCreateInvoice(businessId: string, formData: FormData)
       taxAmount,
       total,
       amountPaid: status === "paid" ? total : 0,
-      paidAt: status === "paid" ? new Date().toISOString() : null,
+      // Backfilled invoices were paid in the past, not "just now" — default
+      // to the invoice's own due date (typed over if a specific paid date
+      // is given) so the dashboard's "paid this month" figure doesn't get
+      // inflated by old invoices entered today.
+      paidAt: status === "paid" ? (formData.get("paidAt") as string) || dueDate : null,
       notes,
     })
     .returning();
@@ -203,5 +207,27 @@ export async function adminCreateInvoice(businessId: string, formData: FormData)
 
   revalidatePath(`/admin/${businessId}`);
   revalidatePath("/admin");
+  redirect(`/admin/${businessId}`);
+}
+
+/**
+ * Corrects the paid date on an already-created invoice — fixes the case
+ * where a backfilled invoice was marked "Paid" and got stamped with
+ * today's date instead of when it was actually paid (which skews the
+ * dashboard's "paid this month" figure). Admin-only, same gate as the rest
+ * of this file. No-ops the amountPaid/status — only touches paidAt.
+ */
+export async function adminSetPaidDate(businessId: string, invoiceId: string, formData: FormData) {
+  await requireAdmin();
+
+  const paidAt = (formData.get("paidAt") as string)?.trim();
+  if (!paidAt) throw new Error("Paid date is required");
+
+  const invoice = await db.query.invoices.findFirst({ where: eq(invoices.id, invoiceId) });
+  if (!invoice || invoice.businessId !== businessId) throw new Error("Invoice not found");
+
+  await db.update(invoices).set({ paidAt }).where(eq(invoices.id, invoiceId));
+
+  revalidatePath(`/admin/${businessId}`);
   redirect(`/admin/${businessId}`);
 }

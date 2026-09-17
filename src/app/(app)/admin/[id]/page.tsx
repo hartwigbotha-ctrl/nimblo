@@ -4,7 +4,7 @@ import { db } from "@/db";
 import { businesses, clients, invoices, items } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { isAdminEmail } from "@/lib/admin";
-import { adminCreateClient, adminCreateInvoice } from "@/lib/actions/admin";
+import { adminCreateClient, adminCreateInvoice, adminSetPaidDate } from "@/lib/actions/admin";
 import { ClientForm } from "../../clients/client-form";
 import { InvoiceForm } from "../../invoices/invoice-form";
 import { formatISO, addDays } from "date-fns";
@@ -79,11 +79,35 @@ export default async function AdminBusinessPage({ params }: { params: Promise<{ 
         {allInvoices.length === 0 ? (
           <p className="text-sm text-gray-500 mb-4">No invoices yet.</p>
         ) : (
-          <ul className="text-sm text-gray-700 mb-4 space-y-1">
+          <ul className="text-sm text-gray-700 mb-4 space-y-2">
             {allInvoices.map((inv) => (
-              <li key={inv.id}>
-                {inv.number} — {inv.client?.name ?? "Unknown client"} — {business.currency} {inv.total.toFixed(2)} —{" "}
-                {inv.status} — {inv.issueDate}
+              <li key={inv.id} className="flex flex-wrap items-center gap-2">
+                <span>
+                  {inv.number} — {inv.client?.name ?? "Unknown client"} — {business.currency}{" "}
+                  {inv.total.toFixed(2)} — {inv.status} — {inv.issueDate}
+                  {inv.status === "paid" && (
+                    <span className="text-gray-400"> — paid {inv.paidAt?.slice(0, 10) ?? "—"}</span>
+                  )}
+                </span>
+                {inv.status === "paid" && (
+                  <form
+                    action={adminSetPaidDate.bind(null, id, inv.id)}
+                    className="flex items-center gap-1"
+                  >
+                    <input
+                      name="paidAt"
+                      type="date"
+                      defaultValue={inv.paidAt?.slice(0, 10) || inv.dueDate}
+                      className="rounded-md border border-gray-300 px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-gray-900"
+                    />
+                    <button
+                      type="submit"
+                      className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-md hover:bg-gray-200"
+                    >
+                      Fix paid date
+                    </button>
+                  </form>
+                )}
               </li>
             ))}
           </ul>

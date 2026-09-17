@@ -53,6 +53,20 @@ export function InvoiceForm({
             </p>
           </div>
         )}
+        {showNumberField && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Paid date</label>
+            <input
+              name="paidAt"
+              type="date"
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Only used if status is &quot;Paid&quot;. Leave blank to use the due date above — never today&apos;s
+              date, so it doesn&apos;t skew this month&apos;s figures.
+            </p>
+          </div>
+        )}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Client</label>
           <select

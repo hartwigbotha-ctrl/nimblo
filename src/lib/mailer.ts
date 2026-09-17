@@ -23,6 +23,34 @@ export function friendlyEmailError(raw: string): string {
 const USE_RESEND_API =
   !!process.env.SMTP_HOST?.toLowerCase().includes("resend.com") && !!process.env.SMTP_PASS;
 
+// Extracts the raw email address out of a MAIL_FROM-style string, e.g.
+// `"Nimblo" <no-reply@usenimblo.com>` -> `no-reply@usenimblo.com`. Falls
+// back to treating the whole string as the address if there's no <...>.
+function extractFromAddress(raw: string | undefined): string | null {
+  if (!raw) return null;
+  const match = raw.match(/<([^>]+)>/);
+  const address = (match ? match[1] : raw).trim();
+  return address || null;
+}
+
+// Builds the "From" header for an invoice/quote email sent to one of a
+// business's clients. SMTP_FROM (e.g. `"Nimblo" <no-reply@usenimblo.com>`)
+// is always set in production because it's the only address that's
+// actually verified to send mail (SPF/DKIM) — but showing "Nimblo" as the
+// sender confuses clients who don't know what Nimblo is, they just want to
+// see who invoiced them. So we keep the verified sending *address* but put
+// the business's own name in the display name instead.
+function buildFromHeader(businessName: string): string {
+  const fromAddress = extractFromAddress(process.env.SMTP_FROM);
+  if (!fromAddress) {
+    // Nothing configured (local/dev) — fall back to the old behaviour.
+    return process.env.SMTP_FROM || `"${businessName}" <no-reply@invoicing.local>`;
+  }
+  // Strip characters that would break the quoted display name in the header.
+  const safeName = businessName.replace(/["<>]/g, "").trim() || "Nimblo";
+  return `"${safeName} via Nimblo" <${fromAddress}>`;
+}
+
 type SendArgs = {
   from: string;
   to: string;
@@ -114,7 +142,7 @@ export async function sendInvoiceEmail(opts: {
   message?: string;
 }) {
   const info = await send({
-    from: process.env.SMTP_FROM || `"${opts.businessName}" <no-reply@invoicing.local>`,
+    from: buildFromHeader(opts.businessName),
     to: opts.to,
     subject: `Invoice ${opts.invoiceNumber} from ${opts.businessName}`,
     text:
@@ -146,7 +174,7 @@ export async function sendQuoteEmail(opts: {
   message?: string;
 }) {
   const info = await send({
-    from: process.env.SMTP_FROM || `"${opts.businessName}" <no-reply@invoicing.local>`,
+    from: buildFromHeader(opts.businessName),
     to: opts.to,
     subject: `Quote ${opts.quoteNumber} from ${opts.businessName}`,
     text:
@@ -169,8 +197,10 @@ export async function sendQuoteEmail(opts: {
 }
 
 // "Report a problem" notification, sent to the Nimblo operator (not a
-// client of one of our businesses). Set SUPPORT_NOTIFY_EMAIL on Railway to
-// where these should land; falls back to SMTP_FROM's address if unset.
+// client of one of our businesses) — this one should keep saying "Nimblo",
+// since it's an internal notification, not a client-facing invoice email.
+// Set SUPPORT_NOTIFY_EMAIL on Railway to where these should land; falls
+// back to SMTP_FROM's address if unset.
 export async function sendSupportTicketEmail(opts: {
   businessName: string;
   businessEmail: string;
