@@ -86,7 +86,11 @@ export default async function QuotesPage() {
                       {money(q.total, q.currency)}
                     </td>
                     <td className="px-5 py-3">
-                      <QuoteRowActions quoteId={q.id} quoteNumber={q.number} />
+                      <QuoteRowActions
+                        quoteId={q.id}
+                        quoteNumber={q.number}
+                        businessName={business.name}
+                      />
                     </td>
                   </tr>
                 ))}

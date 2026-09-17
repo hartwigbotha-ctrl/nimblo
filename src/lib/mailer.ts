@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer";
+import { buildPdfFilename } from "@/lib/pdf-filename";
 
 // Resend's sandbox-mode 403 has a long technical body; surface the
 // essential part in plain language instead of the raw API error text.
@@ -121,7 +122,7 @@ export async function sendInvoiceEmail(opts: {
       `Hi,\n\nPlease find attached invoice ${opts.invoiceNumber} for ${opts.total}, due ${opts.dueDate}.\n\nThank you,\n${opts.businessName}`,
     attachments: [
       {
-        filename: `${opts.invoiceNumber}.pdf`,
+        filename: buildPdfFilename(opts.businessName, opts.invoiceNumber),
         content: opts.pdfBuffer,
         contentType: "application/pdf",
       },
@@ -153,7 +154,7 @@ export async function sendQuoteEmail(opts: {
       `Hi,\n\nPlease find attached quote ${opts.quoteNumber} for ${opts.total}, valid until ${opts.expiryDate}.\n\nThank you,\n${opts.businessName}`,
     attachments: [
       {
-        filename: `${opts.quoteNumber}.pdf`,
+        filename: buildPdfFilename(opts.businessName, opts.quoteNumber),
         content: opts.pdfBuffer,
         contentType: "application/pdf",
       },

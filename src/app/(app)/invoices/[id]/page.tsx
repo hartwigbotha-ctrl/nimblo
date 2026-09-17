@@ -55,6 +55,7 @@ export default async function InvoiceDetailPage({
           invoiceNumber={invoice.number}
           status={invoice.status}
           hasClientEmail={!!invoice.client.email}
+          businessName={business.name}
         />
       </div>
 

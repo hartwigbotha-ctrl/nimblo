@@ -6,13 +6,16 @@ import Link from "next/link";
 import { toast } from "sonner";
 import { deleteInvoice } from "@/lib/actions/invoices";
 import { PdfPreviewButton } from "../pdf-preview-button";
+import { buildPdfFilename } from "@/lib/pdf-filename";
 
 export function InvoiceRowActions({
   invoiceId,
   invoiceNumber,
+  businessName,
 }: {
   invoiceId: string;
   invoiceNumber: string;
+  businessName: string;
 }) {
   const [pending, startTransition] = useTransition();
   const router = useRouter();
@@ -21,7 +24,7 @@ export function InvoiceRowActions({
     <div className="flex items-center justify-end gap-1">
       <PdfPreviewButton
         href={`/invoices/${invoiceId}/pdf`}
-        filename={`${invoiceNumber}.pdf`}
+        filename={buildPdfFilename(businessName, invoiceNumber)}
         label="Preview"
         className="px-2 py-1 rounded text-xs text-gray-600 hover:bg-gray-100"
       />

@@ -6,17 +6,20 @@ import Link from "next/link";
 import { toast } from "sonner";
 import { sendInvoice, deleteInvoice, markInvoicePaid } from "@/lib/actions/invoices";
 import { PdfPreviewButton } from "../../pdf-preview-button";
+import { buildPdfFilename } from "@/lib/pdf-filename";
 
 export function InvoiceActions({
   invoiceId,
   invoiceNumber,
   status,
   hasClientEmail,
+  businessName,
 }: {
   invoiceId: string;
   invoiceNumber: string;
   status: string;
   hasClientEmail: boolean;
+  businessName: string;
 }) {
   const [pending, startTransition] = useTransition();
   const [sendError, setSendError] = useState<string | null>(null);
@@ -25,7 +28,11 @@ export function InvoiceActions({
   return (
     <div>
       <div className="flex flex-wrap gap-2">
-        <PdfPreviewButton href={`/invoices/${invoiceId}/pdf`} filename={`${invoiceNumber}.pdf`} label="Preview" />
+        <PdfPreviewButton
+          href={`/invoices/${invoiceId}/pdf`}
+          filename={buildPdfFilename(businessName, invoiceNumber)}
+          label="Preview"
+        />
 
         <Link
           href={`/invoices/${invoiceId}/edit`}

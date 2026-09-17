@@ -69,6 +69,7 @@ export default async function QuoteDetailPage({
           status={quote.status}
           hasClientEmail={!!quote.client.email}
           alreadyConverted={!!quote.convertedInvoiceId}
+          businessName={business.name}
         />
       </div>
 

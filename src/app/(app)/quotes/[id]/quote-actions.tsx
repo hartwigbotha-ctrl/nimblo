@@ -11,6 +11,7 @@ import {
   convertQuoteToInvoice,
 } from "@/lib/actions/quotes";
 import { PdfPreviewButton } from "../../pdf-preview-button";
+import { buildPdfFilename } from "@/lib/pdf-filename";
 
 export function QuoteActions({
   quoteId,
@@ -18,12 +19,14 @@ export function QuoteActions({
   status,
   hasClientEmail,
   alreadyConverted,
+  businessName,
 }: {
   quoteId: string;
   quoteNumber: string;
   status: string;
   hasClientEmail: boolean;
   alreadyConverted: boolean;
+  businessName: string;
 }) {
   const [pending, startTransition] = useTransition();
   const [sendError, setSendError] = useState<string | null>(null);
@@ -32,7 +35,11 @@ export function QuoteActions({
   return (
     <div>
       <div className="flex flex-wrap gap-2">
-      <PdfPreviewButton href={`/quotes/${quoteId}/pdf`} filename={`${quoteNumber}.pdf`} label="Preview" />
+      <PdfPreviewButton
+        href={`/quotes/${quoteId}/pdf`}
+        filename={buildPdfFilename(businessName, quoteNumber)}
+        label="Preview"
+      />
 
       <Link
         href={`/quotes/${quoteId}/edit`}

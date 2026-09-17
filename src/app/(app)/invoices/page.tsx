@@ -86,7 +86,11 @@ export default async function InvoicesPage() {
                       {money(inv.total, inv.currency)}
                     </td>
                     <td className="px-5 py-3">
-                      <InvoiceRowActions invoiceId={inv.id} invoiceNumber={inv.number} />
+                      <InvoiceRowActions
+                        invoiceId={inv.id}
+                        invoiceNumber={inv.number}
+                        businessName={business.name}
+                      />
                     </td>
                   </tr>
                 ))}

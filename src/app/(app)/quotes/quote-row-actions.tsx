@@ -6,13 +6,16 @@ import Link from "next/link";
 import { toast } from "sonner";
 import { deleteQuote } from "@/lib/actions/quotes";
 import { PdfPreviewButton } from "../pdf-preview-button";
+import { buildPdfFilename } from "@/lib/pdf-filename";
 
 export function QuoteRowActions({
   quoteId,
   quoteNumber,
+  businessName,
 }: {
   quoteId: string;
   quoteNumber: string;
+  businessName: string;
 }) {
   const [pending, startTransition] = useTransition();
   const router = useRouter();
@@ -21,7 +24,7 @@ export function QuoteRowActions({
     <div className="flex items-center justify-end gap-1">
       <PdfPreviewButton
         href={`/quotes/${quoteId}/pdf`}
-        filename={`${quoteNumber}.pdf`}
+        filename={buildPdfFilename(businessName, quoteNumber)}
         label="Preview"
         className="px-2 py-1 rounded text-xs text-gray-600 hover:bg-gray-100"
       />
