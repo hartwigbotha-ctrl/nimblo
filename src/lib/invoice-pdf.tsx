@@ -24,6 +24,8 @@ export type InvoicePdfData = {
     vatNumber?: string | null;
     bankDetails?: string | null;
     logoUrl?: string | null;
+    logoHeight?: number | null;
+    logoAlign?: string | null;
     brandColor?: string | null;
     pdfTemplate?: string | null;
   };
@@ -54,6 +56,16 @@ function money(amount: number, currency: string) {
   } catch {
     return `${currency} ${amount.toFixed(2)}`;
   }
+}
+
+// Builds the logo's <Image> style from the business's saved size/position
+// settings (set in Settings > Branding), falling back to sensible defaults
+// for businesses that haven't configured these yet.
+function logoStyle(business: InvoicePdfData["business"]): PdfStyle {
+  const height = business.logoHeight && business.logoHeight > 0 ? business.logoHeight : 40;
+  const alignSelf =
+    business.logoAlign === "center" ? "center" : business.logoAlign === "right" ? "flex-end" : "flex-start";
+  return { height, marginBottom: 8, objectFit: "contain", alignSelf };
 }
 
 function statusColor(status: string) {
@@ -96,7 +108,6 @@ const base = StyleSheet.create({
   totalsRow: { flexDirection: "row", justifyContent: "space-between", paddingVertical: 3 },
   totalsLabel: { color: "#6b7280" },
   footer: { marginTop: 30, fontSize: 9, color: "#6b7280" },
-  logo: { height: 40, marginBottom: 8, objectFit: "contain" },
   statusBadge: {
     marginTop: 8,
     paddingVertical: 3,
@@ -200,7 +211,7 @@ function ModernLayout({ data }: { data: InvoicePdfData }) {
     <Page size="A4" style={base.page}>
       <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 24 }}>
         <View>
-          {business.logoUrl && <Image src={business.logoUrl} style={base.logo} />}
+          {business.logoUrl && <Image src={business.logoUrl} style={logoStyle(business)} />}
           <Text style={{ fontSize: 18, fontWeight: 700, marginBottom: 4 }}>{business.name}</Text>
           {business.address && <Text style={base.small}>{business.address}</Text>}
           {business.email && <Text style={base.small}>{business.email}</Text>}
@@ -257,7 +268,7 @@ function ClassicLayout({ data }: { data: InvoicePdfData }) {
   return (
     <Page size="A4" style={[base.page, { fontFamily: "Times-Roman" }]}>
       <View style={{ alignItems: "center", marginBottom: 20 }}>
-        {business.logoUrl && <Image src={business.logoUrl} style={[base.logo, { alignSelf: "center" }]} />}
+        {business.logoUrl && <Image src={business.logoUrl} style={logoStyle(business)} />}
         <Text style={{ fontSize: 20, fontWeight: 700, marginBottom: 2 }}>{business.name}</Text>
         {business.address && <Text style={base.small}>{business.address}</Text>}
         {business.email && <Text style={base.small}>{business.email}</Text>}
@@ -309,7 +320,7 @@ function MinimalLayout({ data }: { data: InvoicePdfData }) {
     <Page size="A4" style={base.page}>
       <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 30 }}>
         <View>
-          {business.logoUrl && <Image src={business.logoUrl} style={base.logo} />}
+          {business.logoUrl && <Image src={business.logoUrl} style={logoStyle(business)} />}
           <Text style={{ fontSize: 14, fontWeight: 700 }}>{business.name}</Text>
           {business.address && <Text style={base.small}>{business.address}</Text>}
           {business.email && <Text style={base.small}>{business.email}</Text>}

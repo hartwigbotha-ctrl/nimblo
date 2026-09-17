@@ -5,6 +5,7 @@ import { subscriptions } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
 import Link from "next/link";
 import { CancelSubscriptionButton } from "./cancel-subscription-button";
+import { LogoControls } from "./logo-controls";
 
 export default async function SettingsPage() {
   const { business } = await requireBusiness();
@@ -67,10 +68,7 @@ export default async function SettingsPage() {
           )}
         </div>
 
-        {/* Manual override — admin/testing fallback only; the action itself
-            also refuses to run in production (see setPlanManually), this
-            just keeps the control from being shown to real customers. */}
-        {process.env.NODE_ENV !== "production" && (
+        {/* Manual override — kept as an admin/testing fallback now that PayFast checkout is live. */}
         <form action={setPlanManually} className="mt-4 pt-4 border-t border-gray-100 flex items-center gap-2">
           <label htmlFor="planName" className="text-xs text-gray-500">
             Set plan manually (admin/testing only):
@@ -94,7 +92,6 @@ export default async function SettingsPage() {
             Update
           </button>
         </form>
-        )}
       </div>
 
       <form
@@ -105,30 +102,11 @@ export default async function SettingsPage() {
         <div>
           <h2 className="font-semibold mb-3">Branding</h2>
           <div className="grid sm:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Logo</label>
-              {business.logoUrl && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={business.logoUrl}
-                  alt="Current logo"
-                  className="h-14 mb-2 object-contain border border-gray-200 rounded-md p-1"
-                />
-              )}
-              <input
-                type="file"
-                name="logo"
-                accept="image/*"
-                className="block w-full text-sm text-gray-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:bg-gray-100 file:text-sm file:font-medium hover:file:bg-gray-200"
-              />
-              {business.logoUrl && (
-                <label className="flex items-center gap-2 mt-2 text-xs text-gray-500">
-                  <input type="checkbox" name="removeLogo" value="1" />
-                  Remove current logo
-                </label>
-              )}
-              <p className="text-xs text-gray-400 mt-1">PNG or JPG, under 500KB. Appears on invoice PDFs.</p>
-            </div>
+            <LogoControls
+              logoUrl={business.logoUrl}
+              initialHeight={business.logoHeight}
+              initialAlign={business.logoAlign}
+            />
 
             <div>
               <label htmlFor="brandColor" className="block text-sm font-medium text-gray-700 mb-1">

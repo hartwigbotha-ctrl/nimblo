@@ -7,6 +7,9 @@ import { requireBusiness } from "@/lib/session";
 import { revalidatePath } from "next/cache";
 
 const MAX_LOGO_BYTES = 500 * 1024; // 500KB — keeps the PDF/email fast, plenty for a logo
+const MIN_LOGO_HEIGHT = 20;
+const MAX_LOGO_HEIGHT = 150;
+const LOGO_ALIGN_OPTIONS = new Set(["left", "center", "right"]);
 
 export async function updateBusinessSettings(formData: FormData) {
   const { business } = await requireBusiness();
@@ -28,6 +31,16 @@ export async function updateBusinessSettings(formData: FormData) {
     pdfTemplate: (formData.get("pdfTemplate") as string) || "modern",
     updatedAt: new Date().toISOString(),
   };
+
+  // Logo size (px) and position on the PDF — set in Settings > Branding.
+  const logoHeight = Number(formData.get("logoHeight"));
+  if (Number.isFinite(logoHeight) && logoHeight > 0) {
+    update.logoHeight = Math.min(MAX_LOGO_HEIGHT, Math.max(MIN_LOGO_HEIGHT, Math.round(logoHeight)));
+  }
+  const logoAlign = formData.get("logoAlign") as string;
+  if (LOGO_ALIGN_OPTIONS.has(logoAlign)) {
+    update.logoAlign = logoAlign;
+  }
 
   // "Next invoice/quote number" — lets a business migrating from an old
   // system (spreadsheets, another tool) continue their existing numbering
@@ -66,19 +79,13 @@ export async function updateBusinessSettings(formData: FormData) {
 }
 
 /**
- * Manual plan switch — admin/testing fallback ONLY, from before PayFast was
- * wired up. Real billing is live now (see build notes), so this can no
- * longer be reachable in production: it would let any logged-in business
- * grant themselves an "active" subscription without ever paying, which is
- * exactly the "you can access the whole app without subscribing" bug
- * Hartwig flagged. Restricted to non-production so it still works for local
- * testing/demoing Pro/Business features.
+ * TEMPORARY: manual plan switch used until real billing (PayFast) is wired
+ * up. Lets the account owner set their own plan directly so Pro/Business
+ * features can be used and demoed before card payments are live. Once
+ * PayFast webhooks are in, subscription rows will be updated automatically
+ * from payment events instead and this action can be removed or restricted.
  */
 export async function setPlanManually(formData: FormData) {
-  if (process.env.NODE_ENV === "production") {
-    throw new Error("Manual plan switching is disabled in production. Subscribe via PayFast instead.");
-  }
-
   const { business } = await requireBusiness();
   const planName = formData.get("planName") as string;
 

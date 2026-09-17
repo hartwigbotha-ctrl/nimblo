@@ -31,6 +31,10 @@ export const businesses = sqliteTable("businesses", {
   vatNumber: text("vat_number"),
   regNumber: text("reg_number"),
   logoUrl: text("logo_url"),
+  // Logo display height in px on the PDF (the width scales proportionally).
+  logoHeight: integer("logo_height").notNull().default(40),
+  // Where the logo sits within the header block: left | center | right.
+  logoAlign: text("logo_align").notNull().default("left"),
   brandColor: text("brand_color").notNull().default("#111827"),
   pdfTemplate: text("pdf_template").notNull().default("modern"), // modern | classic | minimal
   invoicePrefix: text("invoice_prefix").notNull().default("INV"),
