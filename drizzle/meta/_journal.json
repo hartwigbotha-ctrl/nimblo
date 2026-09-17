@@ -64,6 +64,13 @@
       "when": 1787400224928,
       "tag": "0008_cheerful_genesis",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1789633285235,
+      "tag": "0009_rainy_the_initiative",
+      "breakpoints": true
     }
   ]
 }

@@ -5,6 +5,16 @@ import { eq, desc } from "drizzle-orm";
 import Link from "next/link";
 import { DeleteClientButton } from "./delete-button";
 
+function countExtras(value: string | null): number {
+  if (!value) return 0;
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed.length : 0;
+  } catch {
+    return 0;
+  }
+}
+
 export default async function ClientsPage() {
   const { business } = await requireBusiness();
   const allClients = await db.query.clients.findMany({
@@ -51,8 +61,18 @@ export default async function ClientsPage() {
                       {c.name}
                     </Link>
                   </td>
-                  <td className="px-5 py-3 text-gray-600">{c.email || "—"}</td>
-                  <td className="px-5 py-3 text-gray-600">{c.phone || "—"}</td>
+                  <td className="px-5 py-3 text-gray-600">
+                    {c.email || "—"}
+                    {countExtras(c.extraEmails) > 0 && (
+                      <span className="ml-1 text-xs text-gray-400">+{countExtras(c.extraEmails)}</span>
+                    )}
+                  </td>
+                  <td className="px-5 py-3 text-gray-600">
+                    {c.phone || "—"}
+                    {countExtras(c.extraPhones) > 0 && (
+                      <span className="ml-1 text-xs text-gray-400">+{countExtras(c.extraPhones)}</span>
+                    )}
+                  </td>
                   <td className="px-5 py-3 text-right">
                     <DeleteClientButton clientId={c.id} />
                   </td>

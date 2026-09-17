@@ -84,9 +84,17 @@ export const clients = sqliteTable("clients", {
     .references(() => businesses.id, { onDelete: "cascade" }),
   name: text("name").notNull(),
   email: text("email"),
+  // Additional email addresses beyond the primary one above, stored as a
+  // JSON array of strings (e.g. '["accounts@acme.com","jane@acme.com"]').
+  // The primary `email` column is still what's used for sending invoices/
+  // quotes and shown on PDFs — these are just extra contacts to keep on file.
+  extraEmails: text("extra_emails"),
   address: text("address"), // billing address
   contactName: text("contact_name"),
   phone: text("phone"),
+  // Additional phone numbers beyond the primary one above, same JSON-array
+  // format as extraEmails.
+  extraPhones: text("extra_phones"),
   mobile: text("mobile"),
   website: text("website"),
   vatNumber: text("vat_number"), // tax number

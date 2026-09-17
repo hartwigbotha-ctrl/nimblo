@@ -11,9 +11,11 @@ import { z } from "zod";
 const clientSchema = z.object({
   name: z.string().min(1, "Name is required"),
   email: z.string().email().optional().or(z.literal("")),
+  extraEmails: z.array(z.string().email()),
   address: z.string().optional(),
   contactName: z.string().optional(),
   phone: z.string().optional(),
+  extraPhones: z.array(z.string()),
   mobile: z.string().optional(),
   website: z.string().optional(),
   vatNumber: z.string().optional(),
@@ -21,14 +23,29 @@ const clientSchema = z.object({
   notes: z.string().optional(),
 });
 
+// The form submits repeatable "email" / "phone" inputs (one primary + any
+// number of extras added via the "+ Add" button). getAll() picks up every
+// input sharing that name; the first non-blank one becomes the primary
+// value stored in the existing column, the rest are kept as a JSON array.
+function splitPrimaryAndExtras(values: FormDataEntryValue[]) {
+  const cleaned = values.map((v) => String(v).trim()).filter(Boolean);
+  const [primary, ...extras] = cleaned;
+  return { primary: primary ?? "", extras };
+}
+
 function parseClientForm(formData: FormData) {
   const customPaymentTerms = formData.get("customPaymentTermsDays");
+  const { primary: email, extras: extraEmails } = splitPrimaryAndExtras(formData.getAll("email"));
+  const { primary: phone, extras: extraPhones } = splitPrimaryAndExtras(formData.getAll("phone"));
+
   return clientSchema.parse({
     name: formData.get("name"),
-    email: formData.get("email") || "",
+    email,
+    extraEmails,
     address: formData.get("address") || undefined,
     contactName: formData.get("contactName") || undefined,
-    phone: formData.get("phone") || undefined,
+    phone,
+    extraPhones,
     mobile: formData.get("mobile") || undefined,
     website: formData.get("website") || undefined,
     vatNumber: formData.get("vatNumber") || undefined,
@@ -46,9 +63,11 @@ export async function createClient(formData: FormData) {
     businessId: business.id,
     name: parsed.name,
     email: parsed.email || null,
+    extraEmails: parsed.extraEmails.length ? JSON.stringify(parsed.extraEmails) : null,
     address: parsed.address || null,
     contactName: parsed.contactName || null,
     phone: parsed.phone || null,
+    extraPhones: parsed.extraPhones.length ? JSON.stringify(parsed.extraPhones) : null,
     mobile: parsed.mobile || null,
     website: parsed.website || null,
     vatNumber: parsed.vatNumber || null,
@@ -69,9 +88,11 @@ export async function updateClient(clientId: string, formData: FormData) {
     .set({
       name: parsed.name,
       email: parsed.email || null,
+      extraEmails: parsed.extraEmails.length ? JSON.stringify(parsed.extraEmails) : null,
       address: parsed.address || null,
       contactName: parsed.contactName || null,
       phone: parsed.phone || null,
+      extraPhones: parsed.extraPhones.length ? JSON.stringify(parsed.extraPhones) : null,
       mobile: parsed.mobile || null,
       website: parsed.website || null,
       vatNumber: parsed.vatNumber || null,
