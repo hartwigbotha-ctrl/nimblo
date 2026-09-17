@@ -29,6 +29,12 @@ const navItems = [
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 
+// Shared with every nav-style link below (sidebar items, Admin, Report a
+// problem) so tapping any of them gives the same instant, visible pressed
+// feedback as buttons get — links don't pick up the global button:active
+// rule in globals.css since they're <a> tags, not <button>s.
+const NAV_LINK_ACTIVE = "active:scale-[0.97] active:bg-gray-200 transition-transform";
+
 export function AppShell({
   businessName,
   userEmail,
@@ -73,7 +79,7 @@ export function AppShell({
               href={item.href}
               prefetch={false}
               onClick={() => setMobileOpen(false)}
-              className={`flex items-center gap-2.5 px-3 py-2 rounded-md text-sm ${
+              className={`flex items-center gap-2.5 px-3 py-2 rounded-md text-sm ${NAV_LINK_ACTIVE} ${
                 active ? "bg-gray-900 text-white" : "text-gray-700 hover:bg-gray-100"
               }`}
             >
@@ -89,7 +95,7 @@ export function AppShell({
             href="/admin"
             prefetch={false}
             onClick={() => setMobileOpen(false)}
-            className={`flex items-center gap-2.5 px-3 py-2 rounded-md text-sm ${
+            className={`flex items-center gap-2.5 px-3 py-2 rounded-md text-sm ${NAV_LINK_ACTIVE} ${
               pathname === "/admin" ? "bg-gray-900 text-white" : "text-gray-700 hover:bg-gray-100"
             }`}
           >
@@ -101,7 +107,7 @@ export function AppShell({
           href="/support"
           prefetch={false}
           onClick={() => setMobileOpen(false)}
-          className={`flex items-center gap-2.5 px-3 py-2 rounded-md text-sm ${
+          className={`flex items-center gap-2.5 px-3 py-2 rounded-md text-sm ${NAV_LINK_ACTIVE} ${
             pathname === "/support" ? "bg-gray-900 text-white" : "text-gray-700 hover:bg-gray-100"
           }`}
         >

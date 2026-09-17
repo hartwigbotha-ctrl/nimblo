@@ -76,7 +76,7 @@ export async function createClient(formData: FormData) {
   });
 
   revalidatePath("/clients");
-  redirect("/clients");
+  redirect(`/clients?saved=${encodeURIComponent("Client added")}`);
 }
 
 export async function updateClient(clientId: string, formData: FormData) {
@@ -103,7 +103,7 @@ export async function updateClient(clientId: string, formData: FormData) {
     .where(and(eq(clients.id, clientId), eq(clients.businessId, business.id)));
 
   revalidatePath("/clients");
-  redirect("/clients");
+  redirect(`/clients?saved=${encodeURIComponent("Client updated")}`);
 }
 
 export async function deleteClient(clientId: string) {

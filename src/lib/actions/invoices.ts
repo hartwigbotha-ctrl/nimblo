@@ -89,7 +89,7 @@ export async function createInvoice(formData: FormData) {
   );
 
   revalidatePath("/invoices");
-  redirect(`/invoices/${invoiceId}`);
+  redirect(`/invoices/${invoiceId}?saved=${encodeURIComponent("Invoice created")}`);
 }
 
 export async function updateInvoice(invoiceId: string, formData: FormData) {
@@ -154,7 +154,7 @@ export async function updateInvoice(invoiceId: string, formData: FormData) {
 
   revalidatePath("/invoices");
   revalidatePath(`/invoices/${invoiceId}`);
-  redirect(`/invoices/${invoiceId}`);
+  redirect(`/invoices/${invoiceId}?saved=${encodeURIComponent("Invoice updated")}`);
 }
 
 export async function deleteInvoice(invoiceId: string) {
@@ -266,4 +266,3 @@ export async function sendInvoice(invoiceId: string): Promise<SendInvoiceResult>
   revalidatePath("/invoices");
   return { ok: true };
 }
-

@@ -60,7 +60,7 @@ export async function createRecurringSchedule(formData: FormData) {
   });
 
   revalidatePath("/recurring");
-  redirect("/recurring");
+  redirect(`/recurring?saved=${encodeURIComponent("Schedule created")}`);
 }
 
 export async function toggleScheduleActive(scheduleId: string, active: boolean) {

@@ -46,7 +46,7 @@ export async function createItem(formData: FormData) {
   });
 
   revalidatePath("/items");
-  redirect("/items");
+  redirect(`/items?saved=${encodeURIComponent("Item added")}`);
 }
 
 export async function updateItem(itemId: string, formData: FormData) {
@@ -68,7 +68,7 @@ export async function updateItem(itemId: string, formData: FormData) {
     .where(and(eq(items.id, itemId), eq(items.businessId, business.id)));
 
   revalidatePath("/items");
-  redirect("/items");
+  redirect(`/items?saved=${encodeURIComponent("Item updated")}`);
 }
 
 export async function deleteItem(itemId: string) {

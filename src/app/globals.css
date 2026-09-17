@@ -17,3 +17,25 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans);
 }
+
+/* Every button in the app gets a visible "pressed" state the instant it's
+ * tapped/clicked — a slight scale-down plus a touch of darkening — instead
+ * of relying on :hover, which gives zero feedback on touchscreens. This is
+ * a base-layer rule (not a utility class) so it applies automatically to
+ * every <button>, current and future, with no per-component changes. */
+@layer base {
+  button:not(:disabled) {
+    transition: transform 100ms ease, filter 100ms ease, background-color 100ms ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  button:not(:disabled):active {
+    transform: scale(0.96);
+    filter: brightness(0.93);
+  }
+
+  button:focus-visible {
+    outline: 2px solid var(--foreground);
+    outline-offset: 2px;
+  }
+}

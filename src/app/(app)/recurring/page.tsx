@@ -3,7 +3,9 @@ import { db } from "@/db";
 import { recurringSchedules } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
 import Link from "next/link";
+import { Suspense } from "react";
 import { ScheduleActions } from "./schedule-actions";
+import { SavedToast } from "../saved-toast";
 
 export default async function RecurringPage() {
   const { business } = await requireBusiness();
@@ -15,6 +17,9 @@ export default async function RecurringPage() {
 
   return (
     <div className="p-4 sm:p-8 max-w-5xl mx-auto">
+      <Suspense fallback={null}>
+        <SavedToast />
+      </Suspense>
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-bold">Recurring invoices</h1>

@@ -89,7 +89,7 @@ export async function createQuote(formData: FormData) {
   );
 
   revalidatePath("/quotes");
-  redirect(`/quotes/${quoteId}`);
+  redirect(`/quotes/${quoteId}?saved=${encodeURIComponent("Quote created")}`);
 }
 
 export async function updateQuote(quoteId: string, formData: FormData) {
@@ -155,7 +155,7 @@ export async function updateQuote(quoteId: string, formData: FormData) {
 
   revalidatePath("/quotes");
   revalidatePath(`/quotes/${quoteId}`);
-  redirect(`/quotes/${quoteId}`);
+  redirect(`/quotes/${quoteId}?saved=${encodeURIComponent("Quote updated")}`);
 }
 
 export async function deleteQuote(quoteId: string) {
@@ -303,5 +303,5 @@ export async function convertQuoteToInvoice(quoteId: string) {
 
   revalidatePath("/quotes");
   revalidatePath("/invoices");
-  redirect(`/invoices/${invoiceId}`);
+  redirect(`/invoices/${invoiceId}?saved=${encodeURIComponent("Draft invoice created from quote")}`);
 }

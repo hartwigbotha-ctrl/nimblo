@@ -5,6 +5,7 @@ import { businesses, subscriptions, plans, users } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { requireBusiness, requireSession } from "@/lib/session";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 
@@ -78,6 +79,7 @@ export async function updateBusinessSettings(formData: FormData) {
 
   revalidatePath("/settings");
   revalidatePath("/invoices");
+  redirect(`/settings?saved=${encodeURIComponent("Settings saved")}`);
 }
 
 /**
@@ -115,6 +117,7 @@ export async function setPlanManually(formData: FormData) {
 
   revalidatePath("/settings");
   revalidatePath("/imports");
+  redirect(`/settings?saved=${encodeURIComponent("Plan updated")}`);
 }
 
 const changePasswordSchema = z

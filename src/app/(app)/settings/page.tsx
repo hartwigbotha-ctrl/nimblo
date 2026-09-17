@@ -4,9 +4,11 @@ import { db } from "@/db";
 import { subscriptions } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
 import Link from "next/link";
+import { Suspense } from "react";
 import { CancelSubscriptionButton } from "./cancel-subscription-button";
 import { LogoControls } from "./logo-controls";
 import { ChangePasswordForm } from "./change-password-form";
+import { SavedToast } from "../saved-toast";
 
 export default async function SettingsPage() {
   const { business } = await requireBusiness();
@@ -22,6 +24,9 @@ export default async function SettingsPage() {
 
   return (
     <div className="p-4 sm:p-8 max-w-3xl mx-auto space-y-8">
+      <Suspense fallback={null}>
+        <SavedToast />
+      </Suspense>
       <div>
         <h1 className="text-2xl font-bold">Settings</h1>
         <p className="text-sm text-gray-600 mt-1">

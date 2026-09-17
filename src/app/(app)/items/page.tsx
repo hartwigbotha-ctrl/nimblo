@@ -3,7 +3,9 @@ import { db } from "@/db";
 import { items } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
 import Link from "next/link";
+import { Suspense } from "react";
 import { DeleteItemButton } from "./delete-button";
+import { SavedToast } from "../saved-toast";
 
 function money(amount: number, currency: string) {
   try {
@@ -22,6 +24,9 @@ export default async function ItemsPage() {
 
   return (
     <div className="p-4 sm:p-8 max-w-5xl mx-auto">
+      <Suspense fallback={null}>
+        <SavedToast />
+      </Suspense>
       <div className="flex items-center justify-between mb-2">
         <h1 className="text-2xl font-bold">Items</h1>
         <Link

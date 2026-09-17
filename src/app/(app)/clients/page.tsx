@@ -3,7 +3,9 @@ import { db } from "@/db";
 import { clients } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
 import Link from "next/link";
+import { Suspense } from "react";
 import { DeleteClientButton } from "./delete-button";
+import { SavedToast } from "../saved-toast";
 
 function countExtras(value: string | null): number {
   if (!value) return 0;
@@ -24,6 +26,9 @@ export default async function ClientsPage() {
 
   return (
     <div className="p-4 sm:p-8 max-w-5xl mx-auto">
+      <Suspense fallback={null}>
+        <SavedToast />
+      </Suspense>
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-2xl font-bold">Clients</h1>
         <Link

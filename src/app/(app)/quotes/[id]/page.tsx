@@ -4,9 +4,11 @@ import { quotes } from "@/db/schema";
 import { and, eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { Suspense } from "react";
 import { statusLabel } from "@/lib/invoice-utils";
 import { QuoteActions } from "./quote-actions";
 import { LimitBanner } from "../../limit-banner";
+import { SavedToast } from "../../saved-toast";
 
 function money(amount: number, currency: string) {
   try {
@@ -45,6 +47,9 @@ export default async function QuoteDetailPage({
 
   return (
     <div className="p-4 sm:p-8 max-w-3xl mx-auto">
+      <Suspense fallback={null}>
+        <SavedToast />
+      </Suspense>
       {limitReached && <LimitBanner limit={limitReached} planName={plan ?? "Starter"} />}
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-8">
         <div>
