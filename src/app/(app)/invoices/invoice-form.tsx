@@ -11,6 +11,7 @@ export function InvoiceForm({
   submitLabel,
   defaultValues,
   showStatus,
+  showNumberField,
 }: {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   action: any;
@@ -28,10 +29,30 @@ export function InvoiceForm({
   };
   /** Only shown on the edit form — a new invoice always starts as a draft. */
   showStatus?: boolean;
+  /**
+   * Admin-only: lets the invoice number be typed instead of auto-assigned —
+   * used when backfilling a customer's historical invoices so the number
+   * can match their old records. Never shown on the normal customer-facing
+   * create form, which always auto-numbers to avoid gaps/duplicates.
+   */
+  showNumberField?: boolean;
 }) {
   return (
     <form action={action} className="bg-white border border-gray-200 rounded-lg p-6 space-y-6">
       <div className="grid sm:grid-cols-2 gap-4">
+        {showNumberField && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Invoice number</label>
+            <input
+              name="number"
+              placeholder="Leave blank to auto-assign"
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              To match an old record, e.g. &quot;INV002&quot;. Leave blank to use the next auto number.
+            </p>
+          </div>
+        )}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Client</label>
           <select

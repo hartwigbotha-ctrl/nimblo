@@ -2,7 +2,7 @@
 
 import { db } from "@/db";
 import { businesses, subscriptions, clients, invoices, invoiceLineItems } from "@/db/schema";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and } from "drizzle-orm";
 import { requireBusiness } from "@/lib/session";
 import { isAdminEmail } from "@/lib/admin";
 import { revalidatePath } from "next/cache";
@@ -151,7 +151,23 @@ export async function adminCreateInvoice(businessId: string, formData: FormData)
 
   const lineItems = parseAdminLineItems(formData);
   const { subtotal, taxAmount, total } = calcTotals(lineItems, taxRate);
-  const number = await nextInvoiceNumber(businessId);
+
+  // Admin-only: an explicit number (e.g. to match a customer's old paper
+  // record) skips auto-numbering entirely — it does NOT advance the
+  // business's own nextInvoiceSeq counter, so their normal numbering picks
+  // up again wherever it left off. Blocks an accidental duplicate within
+  // the same business.
+  const manualNumber = (formData.get("number") as string)?.trim();
+  let number: string;
+  if (manualNumber) {
+    const existing = await db.query.invoices.findFirst({
+      where: and(eq(invoices.businessId, businessId), eq(invoices.number, manualNumber)),
+    });
+    if (existing) throw new Error(`An invoice numbered "${manualNumber}" already exists for this business.`);
+    number = manualNumber;
+  } else {
+    number = await nextInvoiceNumber(businessId);
+  }
 
   const inserted = await db
     .insert(invoices)

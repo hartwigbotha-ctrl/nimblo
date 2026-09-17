@@ -101,6 +101,7 @@ export default async function AdminBusinessPage({ params }: { params: Promise<{ 
                 savedItems={savedItems}
                 submitLabel="Create invoice"
                 showStatus
+                showNumberField
                 defaultValues={{
                   taxRate: business.defaultTaxRate,
                   issueDate: today,
