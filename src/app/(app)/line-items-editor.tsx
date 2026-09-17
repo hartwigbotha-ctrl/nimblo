@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
+import { toast } from "sonner";
 
 export type Row = { description: string; quantity: string; unitPrice: string };
 export type SavedItem = {
@@ -42,7 +43,10 @@ export function LineItemsEditor({
   function addFromCatalog(itemId: string) {
     const item = savedItems?.find((it) => it.id === itemId);
     if (!item) return;
-    const label = item.description?.trim() ? item.description : item.name;
+    // Combine the item's name and description so the line item reads clearly
+    // on its own (e.g. "TEMBISA — CONSULTANCY FEE"), not just the description
+    // on its own with no indication of what it's for.
+    const label = item.description?.trim() ? `${item.name} — ${item.description}` : item.name;
     setRows((prev) => {
       // If the only row is still empty, fill it instead of appending a new one.
       if (prev.length === 1 && !prev[0].description && !prev[0].unitPrice) {
@@ -50,6 +54,7 @@ export function LineItemsEditor({
       }
       return [...prev, { description: label, quantity: "1", unitPrice: String(item.defaultPrice) }];
     });
+    toast.success(`Added "${label}" to line items`);
   }
 
   function removeRow(i: number) {
