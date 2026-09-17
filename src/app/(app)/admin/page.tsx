@@ -5,6 +5,7 @@ import { businesses, subscriptions } from "@/db/schema";
 import { desc } from "drizzle-orm";
 import { isAdminEmail } from "@/lib/admin";
 import { DeleteBusinessButton } from "./delete-business-button";
+import Link from "next/link";
 
 /**
  * Admin-only, cross-tenant view — restricted by email (ADMIN_EMAIL env var,
@@ -92,7 +93,9 @@ export default async function AdminPage() {
               >
                 <td className="p-3 font-medium">
                   {r.flagged && <span className="text-red-600 mr-1">⚠</span>}
-                  {r.name}
+                  <Link href={`/admin/${r.id}`} className="hover:underline">
+                    {r.name}
+                  </Link>
                 </td>
                 <td className="p-3 text-gray-600">{r.email}</td>
                 <td className="p-3">
