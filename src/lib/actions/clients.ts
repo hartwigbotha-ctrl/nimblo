@@ -1,12 +1,14 @@
 "use server";
 
 import { db } from "@/db";
-import { clients } from "@/db/schema";
+import { clients, invoices, quotes, businesses } from "@/db/schema";
 import { and, eq } from "drizzle-orm";
 import { requireBusiness } from "@/lib/session";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { formatISO } from "date-fns";
+import { generateStatementPdf } from "@/lib/statement-pdf";
 
 const clientSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -112,4 +114,54 @@ export async function deleteClient(clientId: string) {
     .delete(clients)
     .where(and(eq(clients.id, clientId), eq(clients.businessId, business.id)));
   revalidatePath("/clients");
+}
+
+/**
+ * Builds a client statement PDF — every invoice and quote for this client
+ * in one timeline plus the outstanding balance, similar to a client's
+ * "Activity" view in other invoicing apps. Outstanding balance uses the
+ * same definition as the dashboard's "Outstanding" figure (sent/overdue
+ * invoices, total minus what's been paid).
+ */
+export async function buildStatementPdfBuffer(clientId: string, businessId: string) {
+  const [business, client, clientInvoices, clientQuotes] = await Promise.all([
+    db.query.businesses.findFirst({ where: eq(businesses.id, businessId) }),
+    db.query.clients.findFirst({ where: and(eq(clients.id, clientId), eq(clients.businessId, businessId)) }),
+    db.query.invoices.findMany({ where: and(eq(invoices.clientId, clientId), eq(invoices.businessId, businessId)) }),
+    db.query.quotes.findMany({ where: and(eq(quotes.clientId, clientId), eq(quotes.businessId, businessId)) }),
+  ]);
+  if (!business) throw new Error("Business not found");
+  if (!client) throw new Error("Client not found");
+
+  const outstandingBalance = clientInvoices
+    .filter((i) => i.status === "sent" || i.status === "overdue")
+    .reduce((sum, i) => sum + (i.total - i.amountPaid), 0);
+
+  const documents = [
+    ...clientInvoices.map((i) => ({
+      type: "invoice" as const,
+      number: i.number,
+      date: i.issueDate,
+      dueDate: i.dueDate,
+      status: i.status,
+      total: i.total,
+    })),
+    ...clientQuotes.map((q) => ({
+      type: "quote" as const,
+      number: q.number,
+      date: q.issueDate,
+      dueDate: q.expiryDate,
+      status: q.status,
+      total: q.total,
+    })),
+  ].sort((a, b) => (a.date < b.date ? 1 : -1));
+
+  return generateStatementPdf({
+    business,
+    client,
+    generatedAt: formatISO(new Date(), { representation: "date" }),
+    currency: business.currency,
+    outstandingBalance,
+    documents,
+  });
 }
