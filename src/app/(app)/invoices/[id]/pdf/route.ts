@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireBusiness } from "@/lib/session";
 import { buildInvoicePdfBuffer } from "@/lib/actions/invoices";
+import { buildPdfFilename } from "@/lib/pdf-filename";
 import { db } from "@/db";
 import { invoices } from "@/db/schema";
 import { and, eq } from "drizzle-orm";
@@ -24,7 +25,7 @@ export async function GET(
   return new NextResponse(new Uint8Array(pdfBuffer), {
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": `inline; filename="${invoice.number}.pdf"`,
+      "Content-Disposition": `inline; filename="${buildPdfFilename(business.name, invoice.number)}"`,
     },
   });
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireBusiness } from "@/lib/session";
 import { buildQuotePdfBuffer } from "@/lib/actions/quotes";
+import { buildPdfFilename } from "@/lib/pdf-filename";
 import { db } from "@/db";
 import { quotes } from "@/db/schema";
 import { and, eq } from "drizzle-orm";
@@ -24,7 +25,7 @@ export async function GET(
   return new NextResponse(new Uint8Array(pdfBuffer), {
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": `inline; filename="${quote.number}.pdf"`,
+      "Content-Disposition": `inline; filename="${buildPdfFilename(business.name, quote.number)}"`,
     },
   });
 }
