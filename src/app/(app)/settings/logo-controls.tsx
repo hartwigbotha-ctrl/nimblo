@@ -14,6 +14,45 @@ const justifyForAlign: Record<string, string> = {
   right: "flex-end",
 };
 
+// Some logo files that render perfectly fine in a browser (interlaced PNGs,
+// CMYK JPEGs, palette/indexed PNGs, WEBP, etc.) silently fail to draw in the
+// invoice PDFs — @react-pdf/renderer's image decoder is far pickier than a
+// browser and just leaves blank space instead of erroring. Rather than fight
+// that decoder, we re-draw whatever the user picks onto a <canvas> and
+// re-export it as a plain baseline PNG here in the browser (which can decode
+// virtually any image format) before it's ever uploaded — so what reaches
+// the server, and later react-pdf, is always a format it's known to render.
+async function reencodeImageAsPng(file: File): Promise<File> {
+  const objectUrl = URL.createObjectURL(file);
+  try {
+    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const el = new window.Image();
+      el.onload = () => resolve(el);
+      el.onerror = () => reject(new Error("Could not read image"));
+      el.src = objectUrl;
+    });
+
+    // Logos never need to be huge — capping the dimensions also helps keep
+    // the re-encoded file comfortably under the 500KB upload limit.
+    const MAX_DIM = 800;
+    const scale = Math.min(1, MAX_DIM / Math.max(img.naturalWidth, img.naturalHeight));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, Math.round(img.naturalWidth * scale));
+    canvas.height = Math.max(1, Math.round(img.naturalHeight * scale));
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) throw new Error("Canvas not supported");
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+    const blob = await new Promise<Blob>((resolve, reject) =>
+      canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("PNG encode failed"))), "image/png")
+    );
+    return new File([blob], "logo.png", { type: "image/png" });
+  } finally {
+    URL.revokeObjectURL(objectUrl);
+  }
+}
+
 export function LogoControls({
   logoUrl,
   initialHeight,
@@ -52,9 +91,21 @@ export function LogoControls({
         type="file"
         name="logo"
         accept="image/*"
-        onChange={(e) => {
-          const file = e.target.files?.[0];
-          if (file) setPreviewUrl(URL.createObjectURL(file));
+        onChange={async (e) => {
+          const input = e.currentTarget;
+          const file = input.files?.[0];
+          if (!file) return;
+          try {
+            const reencoded = await reencodeImageAsPng(file);
+            const dt = new DataTransfer();
+            dt.items.add(reencoded);
+            input.files = dt.files;
+            setPreviewUrl(URL.createObjectURL(reencoded));
+          } catch {
+            // If re-encoding fails for any reason, fall back to uploading
+            // the original file rather than blocking the user entirely.
+            setPreviewUrl(URL.createObjectURL(file));
+          }
         }}
         className="block w-full text-sm text-gray-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:bg-gray-100 file:text-sm file:font-medium hover:file:bg-gray-200"
       />
