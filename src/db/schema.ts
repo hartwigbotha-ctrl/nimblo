@@ -231,6 +231,7 @@ export const invoiceLineItems = sqliteTable("invoice_line_items", {
   invoiceId: text("invoice_id")
     .notNull()
     .references(() => invoices.id, { onDelete: "cascade" }),
+  code: text("code"), // optional site/reference code, carried over from the saved item
   description: text("description").notNull(),
   quantity: real("quantity").notNull().default(1),
   unitPrice: real("unit_price").notNull().default(0),
@@ -296,6 +297,7 @@ export const quoteLineItems = sqliteTable("quote_line_items", {
   quoteId: text("quote_id")
     .notNull()
     .references(() => quotes.id, { onDelete: "cascade" }),
+  code: text("code"), // optional site/reference code, carried over from the saved item
   description: text("description").notNull(),
   quantity: real("quantity").notNull().default(1),
   unitPrice: real("unit_price").notNull().default(0),

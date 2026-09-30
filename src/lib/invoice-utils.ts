@@ -3,6 +3,7 @@ import { businesses, invoices, quotes } from "@/db/schema";
 import { eq, sql } from "drizzle-orm";
 
 export type LineItemInput = {
+  code?: string | null;
   description: string;
   quantity: number;
   unitPrice: number;

@@ -5,7 +5,7 @@ import { Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 
-export type Row = { description: string; quantity: string; unitPrice: string };
+export type Row = { code?: string; description: string; quantity: string; unitPrice: string };
 export type SavedItem = {
   id: string;
   code: string | null;
@@ -24,7 +24,7 @@ export function LineItemsEditor({
   const [rows, setRows] = useState<Row[]>(
     initialRows && initialRows.length > 0
       ? initialRows
-      : [{ description: "", quantity: "1", unitPrice: "" }]
+      : [{ code: "", description: "", quantity: "1", unitPrice: "" }]
   );
 
   const subtotal = rows.reduce(
@@ -37,7 +37,7 @@ export function LineItemsEditor({
   }
 
   function addRow() {
-    setRows((prev) => [...prev, { description: "", quantity: "1", unitPrice: "" }]);
+    setRows((prev) => [...prev, { code: "", description: "", quantity: "1", unitPrice: "" }]);
   }
 
   function addFromCatalog(itemId: string) {
@@ -50,9 +50,9 @@ export function LineItemsEditor({
     setRows((prev) => {
       // If the only row is still empty, fill it instead of appending a new one.
       if (prev.length === 1 && !prev[0].description && !prev[0].unitPrice) {
-        return [{ description: label, quantity: "1", unitPrice: String(item.defaultPrice) }];
+        return [{ code: item.code || "", description: label, quantity: "1", unitPrice: String(item.defaultPrice) }];
       }
-      return [...prev, { description: label, quantity: "1", unitPrice: String(item.defaultPrice) }];
+      return [...prev, { code: item.code || "", description: label, quantity: "1", unitPrice: String(item.defaultPrice) }];
     });
     toast.success(`Added "${label}" to line items`);
   }
@@ -97,7 +97,8 @@ export function LineItemsEditor({
         </p>
       )}
 
-      <div className="grid grid-cols-[1fr_80px_120px_120px_32px] gap-2 mb-2 text-xs font-medium text-gray-500 px-1">
+      <div className="grid grid-cols-[90px_1fr_80px_120px_120px_32px] gap-2 mb-2 text-xs font-medium text-gray-500 px-1">
+        <span>Site</span>
         <span>Description</span>
         <span>Qty</span>
         <span>Unit price</span>
@@ -106,7 +107,15 @@ export function LineItemsEditor({
       </div>
       <div className="space-y-2">
         {rows.map((row, i) => (
-          <div key={i} className="grid grid-cols-[1fr_80px_120px_120px_32px] gap-2 items-center">
+          <div key={i} className="grid grid-cols-[90px_1fr_80px_120px_120px_32px] gap-2 items-center">
+            <input
+              name="li_code"
+              value={row.code || ""}
+              onChange={(e) => updateRow(i, { code: e.target.value })}
+              placeholder="Site"
+              title="Site / reference code — shown on the invoice"
+              className="rounded-md border border-gray-300 px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+            />
             <input
               name="li_description"
               value={row.description}

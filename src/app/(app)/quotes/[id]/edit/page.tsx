@@ -48,6 +48,7 @@ export default async function EditQuotePage({
           notes: quote.notes,
           status: quote.status,
           lineItems: sortedLineItems.map((li) => ({
+            code: li.code || "",
             description: li.description,
             quantity: String(li.quantity),
             unitPrice: String(li.unitPrice),

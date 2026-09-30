@@ -47,7 +47,7 @@ export type InvoicePdfData = {
     total: number;
     notes?: string | null;
   };
-  lineItems: { description: string; quantity: number; unitPrice: number; amount: number }[];
+  lineItems: { code?: string | null; description: string; quantity: number; unitPrice: number; amount: number }[];
 };
 
 function money(amount: number, currency: string) {
@@ -100,7 +100,8 @@ const base = StyleSheet.create({
   small: { fontSize: 9, color: "#6b7280" },
   section: { marginBottom: 20 },
   sectionLabel: { fontSize: 9, color: "#6b7280", marginBottom: 4, textTransform: "uppercase" },
-  colDesc: { flex: 4 },
+  colCode: { flex: 0.9, color: "#6b7280" },
+  colDesc: { flex: 3.1 },
   colQty: { flex: 1, textAlign: "right" },
   colPrice: { flex: 1.5, textAlign: "right" },
   colAmount: { flex: 1.5, textAlign: "right" },
@@ -131,6 +132,7 @@ function LineItemsTable({
   return (
     <View>
       <View style={[{ flexDirection: "row", paddingVertical: 6, paddingHorizontal: 4, fontWeight: 700 }, headerStyle]}>
+        <Text style={base.colCode}>Site</Text>
         <Text style={base.colDesc}>Description</Text>
         <Text style={base.colQty}>Qty</Text>
         <Text style={base.colPrice}>Unit price</Text>
@@ -141,6 +143,7 @@ function LineItemsTable({
           key={i}
           style={[{ flexDirection: "row", paddingVertical: 6, paddingHorizontal: 4 }, rowStyle]}
         >
+          <Text style={base.colCode}>{li.code || ""}</Text>
           <Text style={base.colDesc}>{li.description}</Text>
           <Text style={base.colQty}>{li.quantity}</Text>
           <Text style={base.colPrice}>{money(li.unitPrice, invoice.currency)}</Text>

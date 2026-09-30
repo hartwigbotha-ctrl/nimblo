@@ -66,6 +66,7 @@ export async function generateInvoiceFromSchedule(scheduleId: string) {
   await db.insert(invoiceLineItems).values(
     lineItems.map((li, i) => ({
       invoiceId,
+      code: li.code,
       description: li.description,
       quantity: li.quantity,
       unitPrice: li.unitPrice,
@@ -81,6 +82,7 @@ export async function generateInvoiceFromSchedule(scheduleId: string) {
       client,
       invoice: { number, status: "sent", issueDate, dueDate, currency: business.currency, subtotal, taxRate, taxAmount, total, notes: schedule.notes },
       lineItems: lineItems.map((li, i) => ({
+        code: li.code,
         description: li.description,
         quantity: li.quantity,
         unitPrice: li.unitPrice,

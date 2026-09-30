@@ -13,6 +13,7 @@ import { checkMonthlyDocumentLimit } from "@/lib/plan-access";
 import { addDays, formatISO } from "date-fns";
 
 function parseLineItems(formData: FormData): LineItemInput[] {
+  const codes = formData.getAll("li_code") as string[];
   const descriptions = formData.getAll("li_description") as string[];
   const quantities = formData.getAll("li_quantity") as string[];
   const unitPrices = formData.getAll("li_unitPrice") as string[];
@@ -22,6 +23,7 @@ function parseLineItems(formData: FormData): LineItemInput[] {
     const description = descriptions[i]?.trim();
     if (!description) continue;
     items.push({
+      code: codes[i]?.trim() || null,
       description,
       quantity: Number(quantities[i] || 0) || 0,
       unitPrice: Number(unitPrices[i] || 0) || 0,
@@ -80,6 +82,7 @@ export async function createInvoice(formData: FormData) {
   await db.insert(invoiceLineItems).values(
     lineItems.map((li, i) => ({
       invoiceId,
+      code: li.code,
       description: li.description,
       quantity: li.quantity,
       unitPrice: li.unitPrice,
@@ -144,6 +147,7 @@ export async function updateInvoice(invoiceId: string, formData: FormData) {
   await db.insert(invoiceLineItems).values(
     lineItems.map((li, i) => ({
       invoiceId,
+      code: li.code,
       description: li.description,
       quantity: li.quantity,
       unitPrice: li.unitPrice,
