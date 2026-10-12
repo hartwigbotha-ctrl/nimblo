@@ -17,7 +17,11 @@ import { eq, desc } from "drizzle-orm";
 // Routes that stay reachable even without an active subscription — a
 // business that hasn't paid (or whose card failed) still needs to be able
 // to pay us and to ask for help, just not to use the product itself.
-const BILLING_EXEMPT_PREFIXES = ["/billing", "/support"];
+// "/admin" is included to match proxy.ts's own exemption (an admin's own
+// test business may not have an active subscription) — these two lists had
+// drifted apart, which is exactly what locked an admin out of /admin here
+// even though proxy.ts let the request through.
+const BILLING_EXEMPT_PREFIXES = ["/billing", "/support", "/admin"];
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const { business, session } = await requireBusiness();

@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/db";
-import { businesses, subscriptions, clients, invoices, invoiceLineItems } from "@/db/schema";
+import { businesses, subscriptions, plans, clients, invoices, invoiceLineItems } from "@/db/schema";
 import { eq, desc, and } from "drizzle-orm";
 import { requireBusiness } from "@/lib/session";
 import { isAdminEmail } from "@/lib/admin";
@@ -204,6 +204,50 @@ export async function adminCreateInvoice(businessId: string, formData: FormData)
       sortOrder: i,
     }))
   );
+
+  revalidatePath(`/admin/${businessId}`);
+  revalidatePath("/admin");
+  redirect(`/admin/${businessId}`);
+}
+
+/**
+ * Lets an admin set (or fix) another business's subscription directly —
+ * same effect as the "Set plan manually" fallback on that business's own
+ * Settings page, just reachable without needing their login. Exists for
+ * support cases where a business is stuck "incomplete" (e.g. a PayFast
+ * checkout attempt failed or was abandoned) and needs to be unblocked
+ * without going through a real PayFast payment — mirrors setPlanManually
+ * in src/lib/actions/settings.ts exactly (status "active", clears
+ * canceledAt). Admin-only, same gate as the rest of this file.
+ */
+export async function adminSetSubscription(businessId: string, formData: FormData) {
+  await requireAdmin();
+
+  const planName = formData.get("planName") as string;
+  const plan = await db.query.plans.findFirst({ where: eq(plans.name, planName) });
+  if (!plan) throw new Error("Unknown plan");
+
+  const business = await db.query.businesses.findFirst({ where: eq(businesses.id, businessId) });
+  if (!business) throw new Error("Business not found");
+
+  const existing = await db.query.subscriptions.findFirst({
+    where: eq(subscriptions.businessId, businessId),
+    orderBy: desc(subscriptions.createdAt),
+  });
+
+  const now = new Date().toISOString();
+  if (existing) {
+    await db
+      .update(subscriptions)
+      .set({ planId: plan.id, status: "active", canceledAt: null, updatedAt: now })
+      .where(eq(subscriptions.id, existing.id));
+  } else {
+    await db.insert(subscriptions).values({
+      businessId,
+      planId: plan.id,
+      status: "active",
+    });
+  }
 
   revalidatePath(`/admin/${businessId}`);
   revalidatePath("/admin");
