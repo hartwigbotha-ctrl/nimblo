@@ -51,9 +51,31 @@ function buildFromHeader(businessName: string): string {
   return `"${safeName} via Nimblo" <${fromAddress}>`;
 }
 
+// Every address saved on a client — the primary `email` plus any
+// `extraEmails` (a JSON array string) — de-duplicated, so an invoice/quote
+// reaches everyone the business listed on that client, not just the first.
+export function clientRecipients(client: {
+  email: string | null;
+  extraEmails?: string | null;
+}): string[] {
+  const out: string[] = [];
+  const add = (e: unknown) => {
+    const v = typeof e === "string" ? e.trim() : "";
+    if (v && !out.some((x) => x.toLowerCase() === v.toLowerCase())) out.push(v);
+  };
+  add(client.email);
+  try {
+    const extras = client.extraEmails ? JSON.parse(client.extraEmails) : [];
+    if (Array.isArray(extras)) extras.forEach(add);
+  } catch {
+    // Malformed extras shouldn't block sending to the primary address.
+  }
+  return out;
+}
+
 type SendArgs = {
   from: string;
-  to: string;
+  to: string | string[];
   subject: string;
   text: string;
   replyTo?: string;
@@ -69,7 +91,7 @@ async function sendViaResendApi(args: SendArgs) {
     },
     body: JSON.stringify({
       from: args.from,
-      to: [args.to],
+      to: Array.isArray(args.to) ? args.to : [args.to],
       subject: args.subject,
       text: args.text,
       reply_to: args.replyTo || undefined,
@@ -133,7 +155,7 @@ async function send(args: SendArgs) {
 }
 
 export async function sendInvoiceEmail(opts: {
-  to: string;
+  to: string | string[];
   businessName: string;
   invoiceNumber: string;
   total: string;
@@ -165,7 +187,7 @@ export async function sendInvoiceEmail(opts: {
 }
 
 export async function sendQuoteEmail(opts: {
-  to: string;
+  to: string | string[];
   businessName: string;
   quoteNumber: string;
   total: string;

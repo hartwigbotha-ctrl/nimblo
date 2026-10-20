@@ -10,7 +10,7 @@ import { eq, and, lte } from "drizzle-orm";
 import { calcTotals, nextInvoiceNumber, type LineItemInput } from "@/lib/invoice-utils";
 import { computeNextRunDate, type Frequency } from "@/lib/recurring";
 import { generateInvoicePdf } from "@/lib/invoice-pdf";
-import { sendInvoiceEmail } from "@/lib/mailer";
+import { sendInvoiceEmail, clientRecipients } from "@/lib/mailer";
 import { addDays, formatISO } from "date-fns";
 
 /**
@@ -91,7 +91,7 @@ export async function generateInvoiceFromSchedule(scheduleId: string) {
     });
 
     await sendInvoiceEmail({
-      to: client.email,
+      to: clientRecipients(client),
       businessName: business.name,
       invoiceNumber: number,
       total: `${business.currency} ${total.toFixed(2)}`,

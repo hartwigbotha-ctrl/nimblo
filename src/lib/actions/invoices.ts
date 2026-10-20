@@ -8,7 +8,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { calcTotals, nextInvoiceNumber, type LineItemInput } from "@/lib/invoice-utils";
 import { generateInvoicePdf } from "@/lib/invoice-pdf";
-import { sendInvoiceEmail, friendlyEmailError } from "@/lib/mailer";
+import { sendInvoiceEmail, friendlyEmailError, clientRecipients } from "@/lib/mailer";
 import { checkMonthlyDocumentLimit } from "@/lib/plan-access";
 import { addDays, formatISO } from "date-fns";
 
@@ -242,7 +242,7 @@ export async function sendInvoice(invoiceId: string): Promise<SendInvoiceResult>
 
   try {
     await sendInvoiceEmail({
-      to: invoice.client.email,
+      to: clientRecipients(invoice.client),
       businessName: invoice.business.name,
       invoiceNumber: invoice.number,
       total: `${invoice.currency} ${invoice.total.toFixed(2)}`,

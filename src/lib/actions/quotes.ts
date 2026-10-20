@@ -8,7 +8,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { calcTotals, nextQuoteNumber, nextInvoiceNumber, type LineItemInput } from "@/lib/invoice-utils";
 import { generateInvoicePdf } from "@/lib/invoice-pdf";
-import { sendQuoteEmail, friendlyEmailError } from "@/lib/mailer";
+import { sendQuoteEmail, friendlyEmailError, clientRecipients } from "@/lib/mailer";
 import { checkMonthlyDocumentLimit } from "@/lib/plan-access";
 import { addDays, formatISO } from "date-fns";
 
@@ -209,7 +209,7 @@ export async function sendQuote(quoteId: string): Promise<SendQuoteResult> {
 
   try {
     await sendQuoteEmail({
-      to: quote.client.email,
+      to: clientRecipients(quote.client),
       businessName: quote.business.name,
       quoteNumber: quote.number,
       total: `${quote.currency} ${quote.total.toFixed(2)}`,
